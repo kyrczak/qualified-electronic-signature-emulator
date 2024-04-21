@@ -5,7 +5,7 @@ from Crypto.Util.Padding import pad, unpad
 from Crypto.Hash import SHA256
 
 def rsa_generate_key_pair():
-    key = RSA.generate(2048)
+    key = RSA.generate(4096)
     private_key = key.export_key()
     public_key = key.publickey().export_key()
     return public_key, private_key 
