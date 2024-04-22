@@ -3,7 +3,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox,filedialog
 from .hardware import *
-WINDOW_SIZE = "800x600"
+from .file_modification import *
+WINDOW_SIZE = "450x300"
 WINDOW_TITLE = "Qualified electronic signature emulator"
 KEY_FORMAT = ".bin"
 
@@ -15,14 +16,14 @@ def start_app():
     tab_control = ttk.Notebook(window)
     tab1 = tk.Frame(tab_control)
     tab2 = tk.Frame(tab_control)
-    tab3 = tk.Frame(tab_control)
     tab_control.add(tab1, text='Sign a document')
     tab_control.add(tab2, text='Encryption/Decryption')
-    tab_control.add(tab3, text="Key generator")
+    
 
     setup_tab1(tab1)
     setup_tab2(tab2)
-    setup_tab3(tab3)
+    
+    
     tab_control.pack(expand=1, fill='both')
     
     window.mainloop()
@@ -72,69 +73,85 @@ def setup_tab1(tab1: tk.Frame):
     return tab1
 
 def setup_tab2(tab2: tk.Frame):
-    load_button = tk.Button(tab2, text="Load File", command=load_file)
-    load_button.pack(pady=10)
+    def load_file_to_encrypt():
+        nonlocal file_path
+        file_path = filedialog.askopenfilename()
+        if file_path:
+            print("File path:", file_path)
 
-    encrypt_button = tk.Button(tab2, text="Encrypt File", command=aes_encryption)
-    encrypt_button.pack(pady=5)
+    def load_public_key()->bytes:
+        nonlocal key_path
+        nonlocal file_path
+        nonlocal public_key
+        if file_path == "":
+            messagebox.showerror("Error","Firstly load the file")
+            return
+        key_path = filedialog.askopenfilename()
+        if key_path.endswith(KEY_FORMAT):
+            print("Key: ",key_path)
+            public_key = read_key_from_file(key_path)
 
-    decrypt_button = tk.Button(tab2, text="Decrypt File", command=aes_decryption)
-    decrypt_button.pack(pady=5) 
-
-def setup_tab3(tab3: tk.Frame):
-    def generate_keys():
-        public_key, private_key = rsa_generate_key_pair()
-        public_key_text.delete(1.0, tk.END)
-        public_key_text.insert(tk.END, public_key.decode('utf-8'))
-        private_key_text.delete(1.0, tk.END)
-        private_key_text.insert(tk.END, private_key.decode('utf-8'))
-
-    def save_private_key():
+    def load_private_key()->bytes:
+        nonlocal key_path
+        nonlocal file_path
+        nonlocal private_key
+        nonlocal pin
         pin = pin_entry.get()
-        if not pin:
-            messagebox.showerror("Error", "Please enter a PIN.")
+        if file_path == "":
+            messagebox.showerror("Error","Firstly load the file")
+            return
+        if(pin == ""):
+            messagebox.showerror("Error","Enter pin")
             return
         
-        private_key = private_key_text.get(1.0, tk.END).strip()
-        encrypted_private_key = aes_encryption(private_key.encode('utf-8'), pin)
-        filename = filedialog.asksaveasfilename(defaultextension=KEY_FORMAT)
-        if filename:
-            save_key_to_file(encrypted_private_key, filename)
-            messagebox.showinfo("Success", "Private key saved successfully.")
+        if file_path:
+            key_path = filedialog.askopenfilename()
+            if key_path.endswith(KEY_FORMAT):
+                print("Key: ",key_path)
+                private_key = read_key_from_file(key_path,pin)
 
-    def save_public_key():
-             public_key = public_key_text.get(1.0, tk.END).strip()
-             filename = filedialog.asksaveasfilename(defaultextension=KEY_FORMAT)
-             if filename:
-                save_key_to_file(str.encode(public_key), filename)
-                messagebox.showinfo("Success", "Public key saved successfully.")
+    def rsa_encrypt_wrapper():
+        try:    
+            rsa_encrypt(file_path,public_key)
+            messagebox.showinfo("Success", f"File encrypted sucesfully at {os.path.dirname(file_path)}\\encrypted_{os.path.basename(file_path)}")
+        except:
+            messagebox.showerror("Error", f"Can't encrypt")
+            
+    def rsa_decrypt_wrapper():
+         try:    
+            rsa_decrypt(file_path,private_key)
+            messagebox.showinfo("Success", f"File decrypted sucesfully at {os.path.dirname(file_path)}\\decrypted_{os.path.basename(file_path)}")
+         except:
+            messagebox.showerror("Error", f"Can't decrypt")
+            
+    file_path = ""
+    key_path = ""
+    public_key = ""
+    private_key = ""
+    pin = ""
 
+    load_button = tk.Button(tab2, text="Load File", command=load_file_to_encrypt)
+    load_button.pack(pady=10)
+    load_button = tk.Button(tab2, text="Load Public Key", command=load_public_key)
+    load_button.pack(pady=10)
 
-    generate_button = tk.Button(tab3, text="Generate Keys", command=generate_keys)
-    generate_button.grid(row=0, column=0, pady=5)
+    pin_label = tk.Label(tab2, text="Enter PIN:")
+    pin_label.pack(pady=5)
 
-    public_key_label = tk.Label(tab3, text="Public Key:")
-    public_key_label.grid(row=1, column=0, pady=5, sticky="w")
+    pin_entry = tk.Entry(tab2, show="*")
+    pin_entry.pack(pady=5)
 
-    public_key_text = tk.Text(tab3, height=5, width=60)
-    public_key_text.grid(row=2, column=0, padx=5, pady=5, sticky="w")
+    load_button = tk.Button(tab2, text="Load Private Key", command=load_private_key)
+    load_button.pack(pady=10)
 
-    private_key_label = tk.Label(tab3, text="Private Key:")
-    private_key_label.grid(row=3, column=0, pady=5, sticky="w")
+    encrypt_button = tk.Button(tab2, text="Encrypt File", command=rsa_encrypt_wrapper)
+    encrypt_button.pack(pady=5)
 
-    private_key_text = tk.Text(tab3, height=5, width=60)
-    private_key_text.grid(row=4, column=0, padx=5, pady=5, sticky="w")
+    
 
-    pin_label = tk.Label(tab3, text="Enter PIN:")
-    pin_label.grid(row=5, column=0, pady=5, sticky="w")
+    decrypt_button = tk.Button(tab2, text="Decrypt File", command=rsa_decrypt_wrapper)
+    decrypt_button.pack(pady=5) 
 
-    pin_entry = tk.Entry(tab3, show="*")
-    pin_entry.grid(row=6, column=0, padx=5, pady=5, sticky="w")
-
-    save_button = tk.Button(tab3, text="Save Private Key", command=save_private_key)
-    save_button.grid(row=7, column=0, pady=5)
-    save_button = tk.Button(tab3, text="Save Public Key", command=save_public_key)
-    save_button.grid(row=8, column=0, pady=5)
 
 
 def get_keys(key_dropdown:ttk.Combobox, usb_stick_path:str):
@@ -145,8 +162,5 @@ def get_keys(key_dropdown:ttk.Combobox, usb_stick_path:str):
         else:
             key_dropdown.set("")
     
-def load_file():
-    file_path = filedialog.askopenfilename()
-    if file_path:
-        # Do something with the file_path, such as reading the file
-        print("File path:", file_path)
+
+

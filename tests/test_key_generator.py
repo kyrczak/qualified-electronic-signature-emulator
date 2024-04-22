@@ -18,5 +18,11 @@ def test_aes_encrypt_decrypt():
     decrypted_content = aes_decryption(encrypted_content, pin)
     assert decrypted_content == message
 
+def test_saving_pub_key_to_file():
+    public_key, private_key = rsa_generate_key_pair()
+    save_key_to_file(public_key, "publiczny")
+
+    public_key_from_file = read_key_from_file("D:\\Projekty\\BSK\\qualified-electronic-signature-emulator\\tests\\publiczny")
+    assert public_key == public_key_from_file
 # Run the test
 # $ pytest test_key_generator.py
