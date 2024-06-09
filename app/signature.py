@@ -42,15 +42,13 @@ def sign(document, key):
         f.write(pretty_xml)    
 
 def verify(xml_signature, public_key):
-    print(public_key)
+    path = os.path.abspath(xml_signature)    
     tree = ET.parse(xml_signature)
     root = tree.getroot()
     rsa_public_key = RSA.import_key(public_key)
-    document_name = root.find('FileInfo/FileName').text
-    document_extension = root.find('FileInfo/FileExtension').text
     signature = root.find('SignatureValue').text
 
-    with open(document_name + '.' + document_extension, 'r') as f:
+    with open(path.replace('.xml', ''), 'r') as f:
         document_content = f.read()
 
     try:

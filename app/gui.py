@@ -48,19 +48,32 @@ def setup_tab1(tab1: tk.Frame):
     def sign_document_wrapper():
         key_path = key_var.get()
         file_path = file_var.get()
+        pin = pin_entry.get()
+        if file_path == "":
+            messagebox.showerror("Error","Firstly load the file")
+            return
+        if(pin == ""):
+            messagebox.showerror("Error","Enter pin")
+            return
+        
+        key = read_key_from_file(key_path, pin)
+        
         try:
-            sign(file_path, key_path)
+            sign(file_path, key)
             messagebox.showinfo("Success", f"Document signed sucesfully at {file_path}.xml")
-        except:
+        except Exception as e:
+            print(e)
             messagebox.showerror("Error", f"Can't sign document")
         
     def verify_signature_wrapper():
         key_path = key_var.get()
         file_path = file_var.get()
+        key = read_key_from_file(key_path)
         try:
-            verify(file_path, key_path)
+            verify(file_path, key)
             messagebox.showinfo("Success", f"Signature verified sucesfully")
-        except:
+        except Exception as e:
+            print(e)
             messagebox.showerror("Error", f"Can't verify signature")
 
     label = tk.Label(tab1, text="Select USB Drive")
@@ -76,11 +89,17 @@ def setup_tab1(tab1: tk.Frame):
     file_entry.grid(row=2, column=1, padx=5, pady=10, sticky="nw")
     choose_file_button = ttk.Button(tab1, text="Choose File", command=lambda: file_var.set(filedialog.askopenfilename()))
     choose_file_button.grid(row=2, column=2, padx=5, pady=10, sticky="nw")
-    
+    pin_label = ttk.Label(tab1, text="Enter PIN:")
+    pin_label.grid(row=3, column=0, padx=5, pady=10, sticky="nw")
+
+    pin_entry = ttk.Entry(tab1, show="*")
+    pin_entry.grid(row=3, column=1, padx=5, pady=10, sticky="nw")
+
+
     sign_button = ttk.Button(tab1, text="Sign Document", command=sign_document_wrapper)
-    sign_button.grid(row=3, column=1, padx=5, pady=10, sticky="nw")
+    sign_button.grid(row=4, column=1, padx=5, pady=10, sticky="nw")
     verify_button = ttk.Button(tab1, text="Verify Signature", command=verify_signature_wrapper)
-    verify_button.grid(row=3, column=2, padx=5, pady=10, sticky="nw")
+    verify_button.grid(row=4, column=2, padx=5, pady=10, sticky="nw")
 
     usb_drive_dropdown = ttk.Combobox(tab1, textvariable=usb_sticks_var, values=usb_sticks)
     usb_drive_dropdown.grid(row=0, column=1, padx=5, pady=10, sticky="nw")
