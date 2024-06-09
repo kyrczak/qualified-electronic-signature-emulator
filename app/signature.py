@@ -1,45 +1,62 @@
-import xmlsig
-from xmlsig import algorithms
 from xml.etree import ElementTree as ET
 from datetime import datetime
-import hashlib
-import xades
+from Crypto.Signature import pkcs1_15
+from Crypto.PublicKey import RSA
+from Crypto.Hash import SHA256
+from xml.dom.minidom import parseString
+import os
 
 def sign(document, key):
     with open(document, 'r') as f:
         document_content = f.read()
+
+    document_name = document.split('/')[-1]
+    document_name = document_name.split('.')[0]
+    document_extension = document.split('.')[-1]
+    file_modification_time = datetime.fromtimestamp(os.path.getmtime(document)).isoformat()
+    rsa_key = RSA.import_key(key)
+
+    sigining_key = pkcs1_15.new(rsa_key)
+    signature = sigining_key.sign(SHA256.new(document_content.encode('utf-8')))
+    signature = signature.hex()
     
-    hash_algorithm = hashlib.sha256()  # You can choose the hash algorithm according to your requirements
-    hash_algorithm.update(document_content.encode())
-    document_hash = hash_algorithm.digest()
+    root = ET.Element('Signature')
+    doc_info = ET.SubElement(root, 'FileInfo')
+    xml_document_name = ET.SubElement(doc_info, 'FileName')
+    xml_document_name.text = document_name
+    xml_document_extension = ET.SubElement(doc_info, 'FileExtension')
+    xml_document_extension.text = document_extension
+    xml_document_modification_time = ET.SubElement(doc_info, 'FileModificationTime')
+    xml_document_modification_time.text = file_modification_time
+    xml_user_info = ET.SubElement(root, 'UserInfo')
+    xml_username = ET.SubElement(xml_user_info, 'Username')
+    xml_username.text = os.getlogin()
+    xml_signature = ET.SubElement(root, 'SignatureValue')
+    xml_signature.text = signature
+    xml_signature_timestamp = ET.SubElement(root, 'SignatureTimestamp')
+    xml_signature_timestamp.text = datetime.now().isoformat()
 
-    timestamp = datetime.now().isoformat()
+    pretty_xml = parseString(ET.tostring(root)).toprettyxml()
+    
+    with open(document + '.xml', 'w') as f:
+        f.write(pretty_xml)    
 
-    root = ET.Element('XAdESSignature')
-    document_info = ET.SubElement(root, 'DocumentInfo')
+def verify(xml_signature, public_key):
+    print(public_key)
+    tree = ET.parse(xml_signature)
+    root = tree.getroot()
+    rsa_public_key = RSA.import_key(public_key)
+    document_name = root.find('FileInfo/FileName').text
+    document_extension = root.find('FileInfo/FileExtension').text
+    signature = root.find('SignatureValue').text
 
-    ET.SubElement(document_info, 'Size').text = str(len(document_content))
-    ET.SubElement(document_info, 'Extension').text = document.split('.')[-1]
-    ET.SubElement(document_info, 'DateOfModification').text = timestamp
-    ET.SubElement(root, 'SigningUser').text = 'User A'
-    ET.SubElement(root, 'EncryptedHash').text = str(document_hash)
-    ET.SubElement(root, 'Timestamp').text = timestamp
+    with open(document_name + '.' + document_extension, 'r') as f:
+        document_content = f.read()
 
-    xml_signature = ET.tostring(root,encoding='utf-8')
+    try:
+        pkcs1_15.new(rsa_public_key).verify(SHA256.new((document_content.encode('utf-8'))), bytes.fromhex(signature))
+    except (ValueError, TypeError) as e:
+        print(e)
+        return False
 
-    signature = xmlsig.Xades(
-        key = key,
-        data = xml_signature,
-        signed_info_params={
-            'canonicalization_method': algorithms.C14N_EXCLUSIVE,
-            'signature_method': algorithms.RSA_SHA256,
-            'digest_method': algorithms.SHA256
-        },
-        key_info=xmlsig.KeyInfo(include_x509_data=True)
-    )
-
-    signed_document = signature.sign()
-
-    with open(f'signed_{document.split('.')[0]}.xml', 'wb') as f:
-        f.write(signed_document)
-
+    return True

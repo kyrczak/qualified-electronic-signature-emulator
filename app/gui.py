@@ -4,6 +4,7 @@ from tkinter import ttk
 from tkinter import messagebox,filedialog
 from .hardware import *
 from .file_modification import *
+from .signature import *
 WINDOW_SIZE = "450x300"
 WINDOW_TITLE = "Qualified electronic signature emulator"
 KEY_FORMAT = ".bin"
@@ -44,12 +45,42 @@ def setup_tab1(tab1: tk.Frame):
          else:
             usb_drive_dropdown.set("")
 
+    def sign_document_wrapper():
+        key_path = key_var.get()
+        file_path = file_var.get()
+        try:
+            sign(file_path, key_path)
+            messagebox.showinfo("Success", f"Document signed sucesfully at {file_path}.xml")
+        except:
+            messagebox.showerror("Error", f"Can't sign document")
+        
+    def verify_signature_wrapper():
+        key_path = key_var.get()
+        file_path = file_var.get()
+        try:
+            verify(file_path, key_path)
+            messagebox.showinfo("Success", f"Signature verified sucesfully")
+        except:
+            messagebox.showerror("Error", f"Can't verify signature")
+
     label = tk.Label(tab1, text="Select USB Drive")
     label.grid(row=0, column=0, padx=5, pady=10, sticky="nw")
 
     usb_sticks = []
     usb_sticks_var = tk.StringVar(tab1)
     
+    file_var = tk.StringVar(tab1)
+    file_label = ttk.Label(tab1, text="Select File")
+    file_label.grid(row=2, column=0, padx=5, pady=10, sticky="nw")
+    file_entry = ttk.Entry(tab1, textvariable=file_var)
+    file_entry.grid(row=2, column=1, padx=5, pady=10, sticky="nw")
+    choose_file_button = ttk.Button(tab1, text="Choose File", command=lambda: file_var.set(filedialog.askopenfilename()))
+    choose_file_button.grid(row=2, column=2, padx=5, pady=10, sticky="nw")
+    
+    sign_button = ttk.Button(tab1, text="Sign Document", command=sign_document_wrapper)
+    sign_button.grid(row=3, column=1, padx=5, pady=10, sticky="nw")
+    verify_button = ttk.Button(tab1, text="Verify Signature", command=verify_signature_wrapper)
+    verify_button.grid(row=3, column=2, padx=5, pady=10, sticky="nw")
 
     usb_drive_dropdown = ttk.Combobox(tab1, textvariable=usb_sticks_var, values=usb_sticks)
     usb_drive_dropdown.grid(row=0, column=1, padx=5, pady=10, sticky="nw")
@@ -70,6 +101,8 @@ def setup_tab1(tab1: tk.Frame):
     key_dropdown.grid(row=1, column=1, padx=5, pady=10, sticky="nw")
     refresh_drives_wrapper()
     get_keys_wrapper()
+
+
     return tab1
 
 def setup_tab2(tab2: tk.Frame):
