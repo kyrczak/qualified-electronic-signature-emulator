@@ -84,13 +84,12 @@ def setup_tab1(tab1: tk.Frame):
         if file_path == "":
             messagebox.showerror("Error","Firstly load the file")
             return
-        try:
-            verify(file_path, key)
+        value=verify(file_path, key)
+        if value:
             messagebox.showinfo("Success", f"Signature verified sucesfully")
-        except Exception as e:
-            print(e)
+        else:
             messagebox.showerror("Error", f"Can't verify signature")
-
+        
     label = tk.Label(tab1, text="Select USB Drive")
     label.grid(row=0, column=0, padx=5, pady=10, sticky="nw")
 
