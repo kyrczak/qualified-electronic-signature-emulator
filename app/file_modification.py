@@ -2,6 +2,12 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
 import os
 def rsa_encrypt(file, exported_key):
+    """
+    This function encrypts a file using RSA algorithm.
+
+    :param file: The path to the file to be encrypted.
+    :param exported_key: The public key to encrypt the file.
+    """
     with open(file, 'rb') as f:
         data = f.read()
     public_key = RSA.import_key(exported_key)
@@ -19,6 +25,12 @@ def rsa_encrypt(file, exported_key):
         f.write(cipher_file)
 
 def rsa_decrypt(file, exported_key):
+    """
+    This function decrypts a file using RSA algorithm.
+
+    :param file: The path to the file to be decrypted.
+    :param exported_key: The private key to decrypt the file.
+    """
     with open(file, 'rb') as f:
         data = f.read()
     private_key = RSA.import_key(exported_key)

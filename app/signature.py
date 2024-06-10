@@ -7,6 +7,12 @@ from xml.dom.minidom import parseString
 import os
 
 def sign(document, key):
+    """
+    This function signs a document with a private key and generates an XML file with the signature.
+    
+    :param document: The path to the document to be signed.
+    :param key: The private key to sign the document.
+    """
     with open(document, 'r') as f:
         document_content = f.read()
 
@@ -24,12 +30,25 @@ def sign(document, key):
         f.write(pretty_xml) 
 
 def get_document_parts(document):
+    """
+    This function extracts the name and extension of a document.
+
+    :param document: The path to the document.
+    """
     document_name = document.split('/')[-1]
     document_name = document_name.split('.')[0]
     document_extension = document.split('.')[-1]
     return document_name,document_extension
 
 def generate_signature_xml(document_name, document_extension, file_modification_time, signature):
+    """
+    This function generates an XML file with the signature information.
+
+    :param document_name: The name of the document.
+    :param document_extension: The extension of the document.
+    :param file_modification_time: The modification time of the document.
+    :param signature: The signature of the document.
+    """
     root = ET.Element('Signature')
     doc_info = ET.SubElement(root, 'FileInfo')
     xml_document_name = ET.SubElement(doc_info, 'FileName')
@@ -50,6 +69,13 @@ def generate_signature_xml(document_name, document_extension, file_modification_
     return pretty_xml   
 
 def verify(xml_signature, public_key):
+    """
+    This function verifies the signature of a document.
+    
+    :param xml_signature: The path to the XML signature file.
+    :param public_key: The public key to verify the signature.
+    """
+    
     path = os.path.abspath(xml_signature)    
     tree = ET.parse(xml_signature)
     root = tree.getroot()

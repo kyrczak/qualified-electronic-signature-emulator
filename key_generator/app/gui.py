@@ -7,6 +7,9 @@ WINDOW_TITLE = "Key Generator"
 KEY_FORMAT = ".bin"
 
 def start_app():
+    """
+    This function starts the application.
+    """
     window = tk.Tk()
     window.geometry(WINDOW_SIZE)
     window.title(WINDOW_TITLE)
@@ -22,7 +25,15 @@ def start_app():
     window.mainloop()
 
 def setup_tab1(tab1: tk.Frame):
+    """
+    This function sets up the first tab of the application.
+    
+    :param tab1: The tab to be set up.
+    """
     def generate_keys():
+        """
+        This function generates a RSA key pair.
+        """
         public_key, private_key = rsa_generate_key_pair()
         public_key_text.delete(1.0, tk.END)
         public_key_text.insert(tk.END, public_key.decode('utf-8'))
@@ -30,6 +41,9 @@ def setup_tab1(tab1: tk.Frame):
         private_key_text.insert(tk.END, private_key.decode('utf-8'))
 
     def save_private_key():
+        """ 
+        This function saves the private key to a file.
+        """
         pin = pin_entry.get()
         if not pin:
             messagebox.showerror("Error", "Please enter a PIN.")
@@ -43,11 +57,14 @@ def setup_tab1(tab1: tk.Frame):
             messagebox.showinfo("Success", "Private key saved successfully.")
 
     def save_public_key():
-             public_key = public_key_text.get(1.0, tk.END).strip()
-             filename = filedialog.asksaveasfilename(defaultextension=KEY_FORMAT)
-             if filename:
-                save_key_to_file(str.encode(public_key), filename)
-                messagebox.showinfo("Success", "Public key saved successfully.")
+        """
+        This function saves the public key to a file.
+        """
+        public_key = public_key_text.get(1.0, tk.END).strip()
+        filename = filedialog.asksaveasfilename(defaultextension=KEY_FORMAT)
+        if filename:
+            save_key_to_file(str.encode(public_key), filename)
+            messagebox.showinfo("Success", "Public key saved successfully.")
 
 
     generate_button = tk.Button(tab1, text="Generate Keys", command=generate_keys)

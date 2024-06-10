@@ -5,16 +5,33 @@ from Crypto.Util.Padding import pad, unpad
 from Crypto.Hash import SHA256
 
 def rsa_generate_key_pair():
+    """ 
+    This function generates the RSA key pair.
+    
+    :return: The public and private key.
+    """
     key = RSA.generate(4096)
     private_key = key.export_key()
     public_key = key.publickey().export_key()
     return public_key, private_key 
 
 def save_key_to_file(key, filename):
+    """
+    This function saves a key to a file.
+    
+    :param key: The key to be saved.
+    :param filename: The path to the file where the key will be saved.
+    """
     with open(filename, 'wb') as f:
         f.write(key)
 
 def read_key_from_file(filename, pin = None):
+    """
+    This function reads a key from a file.
+
+    :param filename: The path to the file where the key is saved.
+    :param pin: The pin to decrypt the key.
+    """
     with open(filename, 'rb') as f:
         key = f.read()
         if(pin != None):
@@ -22,6 +39,12 @@ def read_key_from_file(filename, pin = None):
     return key
 
 def aes_encryption(private_key, pin):
+    """
+    This function encrypts a private key using AES encryption.
+    
+    :param private_key: The private key to be encrypted.
+    :param pin: The pin to encrypt the private key.
+    """
     aes_key = SHA256.new(pin.encode('utf-8')).digest()
     iv = get_random_bytes(16)
 
@@ -33,6 +56,12 @@ def aes_encryption(private_key, pin):
     return result
 
 def aes_decryption(encrypted_content, pin):
+    """
+    This function decrypts a private key using AES encryption.
+
+    :param encrypted_content: The encrypted private key.
+    :param pin: The pin to decrypt the private key.
+    """
     aes_key = SHA256.new(pin.encode('utf-8')).digest()
     iv = encrypted_content[:16]
     encrypted_content = encrypted_content[16:]

@@ -10,6 +10,9 @@ WINDOW_TITLE = "Qualified electronic signature emulator"
 KEY_FORMAT = ".bin"
 
 def start_app():
+    """
+    This function starts the application.
+    """
     window = tk.Tk()
     window.geometry(WINDOW_SIZE)
     window.title(WINDOW_TITLE)
@@ -31,11 +34,18 @@ def start_app():
 
 
 def setup_tab1(tab1: tk.Frame):
+    """
+    This function sets up the first tab of the application.
+    
+    :param tab1: The tab to be set up.
+    """
     def get_keys_wrapper():
+         """Wrapper function for get_keys function."""
          usb_stick_path = usb_sticks_var.get()
          get_keys(key_dropdown,usb_stick_path)
 
     def refresh_drives_wrapper():
+         """Wrapper function for refresh_drives function."""
          usb_sticks = get_available_usb_sticks()
          usb_drive_dropdown['values'] = usb_sticks
          key_dropdown['values'] = []
@@ -46,6 +56,7 @@ def setup_tab1(tab1: tk.Frame):
             usb_drive_dropdown.set("")
 
     def sign_document_wrapper():
+        """Wrapper function for sign function."""
         key_path = key_var.get()
         file_path = file_var.get()
         pin = pin_entry.get()
@@ -66,9 +77,13 @@ def setup_tab1(tab1: tk.Frame):
             messagebox.showerror("Error", f"Can't sign document")
         
     def verify_signature_wrapper():
+        """Wrapper function for verify function."""
         key_path = key_var.get()
         file_path = file_var.get()
         key = read_key_from_file(key_path)
+        if file_path == "":
+            messagebox.showerror("Error","Firstly load the file")
+            return
         try:
             verify(file_path, key)
             messagebox.showinfo("Success", f"Signature verified sucesfully")
@@ -125,13 +140,20 @@ def setup_tab1(tab1: tk.Frame):
     return tab1
 
 def setup_tab2(tab2: tk.Frame):
+    """
+    This function sets up the second tab of the application.
+
+    :param tab2: The tab to be set up.
+    """
     def load_file_to_encrypt():
+        """ This function loads the file to encrypt."""
         nonlocal file_path
         file_path = filedialog.askopenfilename()
         if file_path:
             print("File path:", file_path)
 
     def load_public_key()->bytes:
+        """ This function loads the public key."""
         nonlocal key_path
         nonlocal file_path
         nonlocal public_key
@@ -144,6 +166,7 @@ def setup_tab2(tab2: tk.Frame):
             public_key = read_key_from_file(key_path)
 
     def load_private_key()->bytes:
+        """ This function loads the private key."""
         nonlocal key_path
         nonlocal file_path
         nonlocal private_key
@@ -163,6 +186,7 @@ def setup_tab2(tab2: tk.Frame):
                 private_key = read_key_from_file(key_path,pin)
 
     def rsa_encrypt_wrapper():
+        """ This function encrypts the file using RSA algorithm."""
         try:    
             rsa_encrypt(file_path,public_key)
             messagebox.showinfo("Success", f"File encrypted sucesfully at {os.path.dirname(file_path)}\\encrypted_{os.path.basename(file_path)}")
@@ -170,6 +194,7 @@ def setup_tab2(tab2: tk.Frame):
             messagebox.showerror("Error", f"Can't encrypt")
             
     def rsa_decrypt_wrapper():
+         """ This function decrypts the file using RSA algorithm."""
          try:    
             rsa_decrypt(file_path,private_key)
             messagebox.showinfo("Success", f"File decrypted sucesfully at {os.path.dirname(file_path)}\\decrypted_{os.path.basename(file_path)}")
@@ -207,6 +232,7 @@ def setup_tab2(tab2: tk.Frame):
 
 
 def get_keys(key_dropdown:ttk.Combobox, usb_stick_path:str):
+        """ This function gets the keys from the USB stick."""
         key_files = scan_for_key_files(usb_stick_path)
         key_dropdown['values'] = key_files
         if key_files:

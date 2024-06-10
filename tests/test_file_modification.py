@@ -2,6 +2,9 @@ from app.file_modification import *
 from app.key_generator import *
 
 def test_rsa_textfile():
+    """
+    This function tests the RSA encryption and decryption of a text file.
+    """
     public_key, private_key = rsa_generate_key_pair()
     file = "test.txt"
     rsa_encrypt(file, public_key)
@@ -11,6 +14,9 @@ def test_rsa_textfile():
     assert data == decrypted_data
 
 def test_rsa_cppfile():
+    """
+    This function tests the RSA encryption and decryption of a C++ file.
+    """
     public_key, private_key = rsa_generate_key_pair()
     file = "test_cpp.cpp"
     rsa_encrypt(file, public_key)
@@ -20,6 +26,9 @@ def test_rsa_cppfile():
     assert data == decrypted_data
 
 def test_rsa_textfile_keys_in_files():
+    """
+    This function tests the RSA encryption and decryption of a text file with keys stored in files.
+    """
     PIN = "123"
     PUBLIC_KEY_LOCATION = "pub.bin"
     PRIVATE_KEY_LOCATION = "priv.bin"
